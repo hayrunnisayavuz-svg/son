@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>EczanePanel — Akıllı Stok & Sipariş Yönetimi</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0e1a;--bg2:#111827;--bg3:#1a2234;--sidebar:#0d1321;
+  --border:#1f2d3d;--tp:#f1f5f9;--ts:#94a3b8;--tm:#4b5563;
+  --green:#10b981;--gbg:rgba(16,185,129,.1);
+  --amber:#f59e0b;--abg:rgba(245,158,11,.1);
+  --red:#ef4444;--rbg:rgba(239,68,68,.1);
+  --blue:#3b82f6;--purple:#a78bfa;--yellow:#fbbf24;
+}
+body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--tp);min-height:100vh;font-size:14px;line-height:1.5}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#2d3748;border-radius:3px}
+.layout{display:grid;grid-template-columns:220px 1fr;grid-template-rows:58px 1fr;min-height:100vh}
+.header{grid-column:1/-1;background:var(--sidebar);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px}
+.logo-icon{width:30px;height:30px;background:var(--green);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.hbadge{background:var(--rbg);color:var(--red);border:1px solid rgba(239,68,68,.35);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600}
+.sidebar{background:var(--sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:12px 0}
+.nav-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--tm);padding:12px 20px 4px;font-weight:600}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 20px;cursor:pointer;color:var(--ts);font-weight:500;border:none;background:none;width:100%;text-align:left;font-size:13px;font-family:inherit;transition:all .15s;border-radius:0}
+.nav-item:hover{background:var(--bg2);color:var(--tp)}
+.nav-item.active{background:var(--gbg);color:var(--green);box-shadow:inset 2px 0 0 var(--green)}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;min-width:18px;text-align:center}
+.sidebar-footer{margin-top:auto;padding:14px 20px;border-top:1px solid var(--border)}
+.main{overflow-y:auto;padding:22px}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px}
+.kpi-lbl{font-size:10px;color:var(--ts);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:6px}
+.kpi-val{font-size:28px;font-weight:700;line-height:1}
+.kpi-sub{font-size:11px;color:var(--tm);margin-top:3px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px}
+.sec-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px}
+.sec-title{font-size:15px;font-weight:600}
+.sec-sub{font-size:12px;color:var(--ts);margin-top:2px}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-bottom:14px}
+.search-box input{background:none;border:none;outline:none;color:var(--tp);font-size:13px;font-family:inherit;width:100%}
+.search-box input::placeholder{color:var(--tm)}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:10px 12px;font-size:10px;font-weight:600;color:var(--ts);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:11px 12px;border-bottom:1px solid rgba(31,45,61,.5);font-size:13px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg3)}
+.bar-bg{height:5px;background:rgba(255,255,255,.07);border-radius:3px;width:80px;overflow:hidden;margin-top:4px}
+.bar-fill{height:100%;border-radius:3px}
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:5px;font-size:10px;font-weight:700;letter-spacing:.02em}
+.badge-r{background:var(--rbg);color:var(--red);border:1px solid rgba(239,68,68,.3)}
+.badge-a{background:var(--abg);color:var(--amber);border:1px solid rgba(245,158,11,.3)}
+.badge-g{background:var(--gbg);color:var(--green);border:1px solid rgba(16,185,129,.3)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .15s;line-height:1}
+.btn-g{background:var(--green);color:#fff}.btn-g:hover{background:#059669}
+.btn-g:disabled{opacity:.4;cursor:default}
+.btn-o{background:transparent;border:1px solid var(--border);color:var(--ts)}.btn-o:hover{border-color:var(--ts);color:var(--tp)}
+.drug-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;margin-bottom:12px;overflow:hidden}
+.dc-head{padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border)}
+.dc-body{padding:14px 16px}
+.wh-row{display:flex;align-items:center;padding:9px 12px;border-radius:8px;margin-bottom:6px;border:1px solid var(--border);background:rgba(255,255,255,.02);transition:background .15s}
+.wh-row.best{border-color:var(--green);background:var(--gbg)}
+.wh-dot{width:8px;height:8px;border-radius:50%;margin-right:10px;flex-shrink:0}
+.cart-ghdr{display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.cart-item{display:flex;align-items:center;padding:11px 16px;border-bottom:1px solid rgba(31,45,61,.4)}
+.cart-item:last-child{border-bottom:none}
+.qty-ctrl{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.05);border-radius:6px;padding:4px 10px}
+.qty-btn{background:none;border:none;color:var(--ts);cursor:pointer;font-size:16px;line-height:1;padding:0;font-family:inherit}.qty-btn:hover{color:var(--tp)}
+.chat-wrap{display:flex;flex-direction:column;height:calc(100vh - 180px);min-height:480px;overflow:hidden}
+.chat-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.bubble{max-width:78%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.55;white-space:pre-wrap}
+.bubble.u{background:var(--green);color:#fff;align-self:flex-end;border-radius:12px 12px 2px 12px}
+.bubble.a{background:var(--bg);border:1px solid var(--border);color:var(--tp);align-self:flex-start;border-radius:12px 12px 12px 2px}
+.quick-acts{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px;border-bottom:1px solid var(--border)}
+.qa-btn{padding:5px 11px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:20px;font-size:11px;color:var(--ts);cursor:pointer;font-family:inherit;transition:all .15s}
+.qa-btn:hover{background:var(--gbg);color:var(--green);border-color:var(--green)}
+.api-row{display:flex;gap:8px;padding:10px 14px;background:rgba(245,158,11,.05);border-bottom:1px solid rgba(245,158,11,.2)}
+.api-inp{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 12px;color:var(--tp);font-size:12px;font-family:inherit;outline:none}
+.api-inp:focus{border-color:var(--amber)}
+.chat-inp-row{display:flex;gap:8px;padding:12px;border-top:1px solid var(--border)}
+.chat-inp{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 14px;color:var(--tp);font-size:13px;font-family:inherit;outline:none}
+.chat-inp:focus{border-color:var(--green)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:13px;height:13px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:50}
+.modal{background:var(--bg2);border:1px solid var(--green);border-radius:16px;padding:36px;text-align:center;max-width:340px;width:90%}
+.ai-avatar{width:28px;height:28px;border-radius:50%;background:var(--gbg);border:1px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:13px;margin-right:8px;flex-shrink:0}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useRef,useEffect}=React;
+
+/* =========================================================
+   API / WEBHOOK AYARLARI
+   1) Gemini API anahtarını buraya yazabilirsin veya uygulama içindeki AI ekranından girebilirsin.
+   2) n8n Webhook URL alanlarını n8n'de workflow'u aktif ettikten sonra kopyalayıp buraya yapıştır.
+   3) GitHub'a public yükleyeceksen API anahtarını doğrudan buraya yazma; ekrandan girmen daha güvenli.
+   ========================================================= */
+const CONFIG = {
+  GEMINI_API_KEY: "", // Örn: AIzaSy...  Public GitHub'a koyma.
+  N8N_ORDER_WEBHOOK_URL: "", // n8n Workflow 1: Order webhook production URL
+  N8N_STOCK_ALERT_WEBHOOK_URL: "", // n8n Workflow 2: Critical stock alert webhook URL
+  N8N_AI_LOG_WEBHOOK_URL: "", // n8n Workflow 3: AI chat log webhook URL
+};
+
+const WH={
+  selcuk:{name:"Selçuk Ecza Deposu",short:"SE",color:"#60a5fa"},
+  hedef:{name:"Hedef Alliance Ecza",short:"HA",color:"#a78bfa"},
+  sancak:{name:"Sancak Ecza Deposu",short:"SA",color:"#fbbf24"},
+};
+
+const DRUGS=[
+  {id:1,name:"Parol 500 mg Tablet",pack:"20 tb",active:"Parasetamol",atc:"N02BE01",stock:3,thr:10,
+   w:{selcuk:{p:18.50,ok:true,d:1},hedef:{p:17.20,ok:true,d:2},sancak:{p:19.80,ok:false,d:3}}},
+  {id:2,name:"Majezik 100 mg Film Tablet",pack:"30 tb",active:"Flurbiprofen",atc:"M01AE09",stock:2,thr:8,
+   w:{selcuk:{p:42.30,ok:true,d:1},hedef:{p:40.10,ok:true,d:1},sancak:{p:43.90,ok:true,d:2}}},
+  {id:3,name:"Augmentin 1000 mg Film Tablet",pack:"14 tb",active:"Amoksisilin + Klav. asit",atc:"J01CR02",stock:5,thr:6,
+   w:{selcuk:{p:185.60,ok:true,d:1},hedef:{p:178.40,ok:false,d:3},sancak:{p:182.00,ok:true,d:1}}},
+  {id:4,name:"Nexium 40 mg Tablet",pack:"28 tb",active:"Esomeprazol",atc:"A02BC05",stock:12,thr:8,
+   w:{selcuk:{p:89.50,ok:true,d:1},hedef:{p:85.20,ok:true,d:2},sancak:{p:91.00,ok:true,d:1}}},
+  {id:5,name:"Ventolin 100 mcg İnhaler",pack:"200 doz",active:"Salbutamol",atc:"R03AC02",stock:1,thr:5,
+   w:{selcuk:{p:67.80,ok:true,d:1},hedef:{p:65.40,ok:true,d:2},sancak:{p:68.50,ok:true,d:2}}},
+  {id:6,name:"Novalgin 500 mg Tablet",pack:"20 tb",active:"Metamizol Sodyum",atc:"N02BB02",stock:8,thr:10,
+   w:{selcuk:{p:32.10,ok:true,d:1},hedef:{p:30.80,ok:true,d:1},sancak:{p:33.50,ok:false,d:4}}},
+  {id:7,name:"Glucophage 1000 mg Film Tablet",pack:"100 tb",active:"Metformin HCl",atc:"A10BA02",stock:18,thr:12,
+   w:{selcuk:{p:54.20,ok:true,d:1},hedef:{p:51.90,ok:true,d:2},sancak:{p:55.80,ok:true,d:1}}},
+  {id:8,name:"Zyrtec 10 mg Film Tablet",pack:"20 tb",active:"Setirizin HCl",atc:"R06AE07",stock:4,thr:8,
+   w:{selcuk:{p:38.90,ok:true,d:1},hedef:{p:36.50,ok:true,d:2},sancak:{p:39.70,ok:true,d:1}}},
+  {id:9,name:"Beloc ZOK 50 mg Tablet",pack:"20 tb",active:"Metoprolol Süksinat",atc:"C07AB02",stock:22,thr:10,
+   w:{selcuk:{p:48.60,ok:true,d:1},hedef:{p:46.20,ok:true,d:2},sancak:{p:49.80,ok:true,d:1}}},
+  {id:10,name:"Lipitor 20 mg Film Tablet",pack:"30 tb",active:"Atorvastatin Kalsiyum",atc:"C10AA05",stock:6,thr:8,
+   w:{selcuk:{p:95.40,ok:false,d:4},hedef:{p:91.20,ok:true,d:1},sancak:{p:96.80,ok:true,d:2}}},
+  {id:11,name:"Cipro 500 mg Film Tablet",pack:"14 tb",active:"Siprofloksasin HCl",atc:"J01MA02",stock:0,thr:6,
+   w:{selcuk:{p:72.30,ok:true,d:1},hedef:{p:69.50,ok:true,d:1},sancak:{p:74.10,ok:true,d:2}}},
+  {id:12,name:"Klacid 500 mg Tablet",pack:"14 tb",active:"Klaritromisin",atc:"J01FA09",stock:3,thr:5,
+   w:{selcuk:{p:112.80,ok:true,d:1},hedef:{p:108.40,ok:true,d:2},sancak:{p:115.20,ok:false,d:3}}},
+  {id:13,name:"Losec 20 mg Kapsül",pack:"28 kps",active:"Omeprazol",atc:"A02BC01",stock:25,thr:10,
+   w:{selcuk:{p:45.60,ok:true,d:1},hedef:{p:43.20,ok:true,d:2},sancak:{p:46.80,ok:true,d:1}}},
+  {id:14,name:"Sinecod 50 mg Tablet",pack:"10 tb",active:"Butamirat Sitrat",atc:"R05DB13",stock:7,thr:8,
+   w:{selcuk:{p:28.40,ok:true,d:1},hedef:{p:26.80,ok:true,d:2},sancak:{p:29.60,ok:true,d:1}}},
+  {id:15,name:"Concor 5 mg Film Tablet",pack:"28 tb",active:"Bisoprolol Fumarat",atc:"C07AB07",stock:14,thr:8,
+   w:{selcuk:{p:62.10,ok:true,d:1},hedef:{p:59.40,ok:true,d:2},sancak:{p:63.50,ok:true,d:1}}},
+  {id:16,name:"Aspirin 500 mg Tablet",pack:"20 tb",active:"Asetilsalisilik Asit",atc:"N02BA01",stock:9,thr:15,
+   w:{selcuk:{p:12.80,ok:true,d:1},hedef:{p:11.90,ok:true,d:1},sancak:{p:13.40,ok:true,d:1}}},
+  {id:17,name:"Voltaren Emulgel %1,16",pack:"100 g",active:"Diklofenak Dietilamonyum",atc:"M02AA15",stock:11,thr:8,
+   w:{selcuk:{p:78.20,ok:true,d:1},hedef:{p:74.60,ok:true,d:2},sancak:{p:79.80,ok:true,d:1}}},
+  {id:18,name:"Xanax 0.25 mg Tablet",pack:"50 tb",active:"Alprazolam",atc:"N05BA12",stock:2,thr:5,
+   w:{selcuk:{p:34.50,ok:true,d:1},hedef:{p:33.20,ok:true,d:1},sancak:{p:35.80,ok:true,d:2}}},
+  {id:19,name:"Aprovel 150 mg Film Tablet",pack:"28 tb",active:"İrbesartan",atc:"C09CA04",stock:16,thr:8,
+   w:{selcuk:{p:87.30,ok:true,d:1},hedef:{p:83.60,ok:true,d:2},sancak:{p:89.10,ok:true,d:1}}},
+  {id:20,name:"Proksafen 50 mg Kapsül",pack:"20 kps",active:"Tramadol HCl",atc:"N02AX02",stock:4,thr:6,
+   w:{selcuk:{p:48.90,ok:true,d:1},hedef:{p:46.50,ok:false,d:4},sancak:{p:50.20,ok:true,d:2}}},
+];
+
+const getSt=(d)=>{
+  if(d.stock===0)return"empty";
+  if(d.stock/d.thr<0.35)return"critical";
+  if(d.stock<d.thr)return"low";
+  return"ok";
+};
+const getBest=(d)=>{
+  const e=Object.entries(d.w).filter(([,w])=>w.ok);
+  if(!e.length)return null;
+  return e.sort(([,a],[,b])=>a.p-b.p)[0][0];
+};
+const stColor=(s)=>({empty:"#ef4444",critical:"#ef4444",low:"#f59e0b",ok:"#10b981"})[s];
+const stBadge=(s)=>({
+  empty:["badge-r","● Stok Yok"],
+  critical:["badge-r","▼ Kritik"],
+  low:["badge-a","⚠ Düşük"],
+  ok:["badge-g","✓ Normal"],
+})[s];
+const fmt=(p)=>p.toFixed(2).replace(".",",")+"\u00A0₺";
+const today=new Date().toLocaleDateString("tr-TR",{day:"numeric",month:"long",year:"numeric"});
+
+function App(){
+  const [tab,setTab]=useState("dashboard");
+  const [search,setSearch]=useState("");
+  const [cart,setCart]=useState({});
+  const [apiKey,setApiKey]=useState(CONFIG.GEMINI_API_KEY || "");
+  const [msgs,setMsgs]=useState([
+    {r:"a",t:"Merhaba! Ben EczanePanel AI asistanıyım. Stok durumu, fiyat karşılaştırması veya sipariş önerileri için buradayım.\n\nBaşlamak için Gemini API anahtarınızı girin veya aşağıdaki hızlı sorulardan birini seçin."}
+  ]);
+  const [input,setInput]=useState("");
+  const [loading,setLoading]=useState(false);
+  const [success,setSuccess]=useState(false);
+  const chatEl=useRef(null);
+
+  const critical=DRUGS.filter(d=>getSt(d)!=="ok");
+  const cartArr=Object.entries(cart).map(([id,v])=>({drug:DRUGS.find(d=>d.id===+id),wh:v.wh,qty:v.qty}));
+  const cartTotal=cartArr.reduce((s,i)=>s+i.drug.w[i.wh].p*i.qty,0);
+  const cartCount=Object.keys(cart).length;
+  const cartByWH={};
+  cartArr.forEach(i=>{if(!cartByWH[i.wh])cartByWH[i.wh]=[];cartByWH[i.wh].push(i);});
+
+  const postJSON = async (url, payload) => {
+    if (!url || !url.trim()) return {ok:false, skipped:true};
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(payload)
+    });
+    let data = null;
+    try { data = await res.json(); } catch(e) { data = {message:"Yanıt JSON değil"}; }
+    return {ok:res.ok, status:res.status, data};
+  };
+
+  const submitOrders = async () => {
+    const payload = {
+      source: "EczanePanel",
+      pharmacy: "Çamlıvadi Eczanesi",
+      createdAt: new Date().toISOString(),
+      orderTotal: cartTotal,
+      warehouseCount: Object.keys(cartByWH).length,
+      items: cartArr.map(i => ({
+        drugId: i.drug.id,
+        drugName: i.drug.name,
+        activeIngredient: i.drug.active,
+        pack: i.drug.pack,
+        atc: i.drug.atc,
+        currentStock: i.drug.stock,
+        threshold: i.drug.thr,
+        warehouseId: i.wh,
+        warehouseName: WH[i.wh].name,
+        unitPrice: i.drug.w[i.wh].p,
+        quantity: i.qty,
+        lineTotal: i.drug.w[i.wh].p * i.qty
+      }))
+    };
+
+    try {
+      const result = await postJSON(CONFIG.N8N_ORDER_WEBHOOK_URL, payload);
+      if (result.skipped) {
+        alert("Demo mod: n8n sipariş webhook URL boş. Sipariş sadece ekranda onaylandı. CONFIG.N8N_ORDER_WEBHOOK_URL alanını doldurursan Google Sheets'e gider.");
+      } else if (!result.ok) {
+        alert("n8n sipariş webhook hatası: HTTP " + result.status);
+        return;
+      }
+      setSuccess(true);
+    } catch (err) {
+      alert("Sipariş n8n'e gönderilemedi. Webhook URL/CORS/Workflow aktif mi kontrol et.");
+    }
+  };
+
+  const addCart=(drug,wh)=>setCart(p=>{
+    const ex=p[drug.id];
+    return{...p,[drug.id]:{wh,qty:ex&&ex.wh===wh?ex.qty+1:1}};
+  });
+  const rmCart=(id)=>setCart(p=>{const n={...p};delete n[id];return n;});
+  const updQty=(id,d)=>setCart(p=>{
+    const c=p[id];if(!c)return p;
+    const q=c.qty+d;
+    if(q<=0){const n={...p};delete n[id];return n;}
+    return{...p,[id]:{...c,qty:q}};
+  });
+
+  const send=async(m)=>{
+    const txt=m||input;if(!txt.trim())return;
+    setInput("");
+    setMsgs(p=>[...p,{r:"u",t:txt}]);
+    setLoading(true);
+    postJSON(CONFIG.N8N_AI_LOG_WEBHOOK_URL, {
+      source:"EczanePanel",
+      type:"user_question",
+      createdAt:new Date().toISOString(),
+      question:txt,
+      cartItemCount:cartArr.length,
+      criticalItemCount:critical.length
+    }).catch(()=>{});
+    if(!apiKey){
+      setMsgs(p=>[...p,{r:"a",t:"⚠️ Lütfen önce Gemini API anahtarınızı girin.\n\n🔗 Ücretsiz almak için: aistudio.google.com/app/apikey"}]);
+      setLoading(false);return;
+    }
+    const ctx=`Sen EczanePanel'in Türkçe konuşan AI asistanısın. Kısa ve net yanıt ver.
+Eczane: Çamlıvadi Eczanesi
+Kritik/Düşük stoklar: ${critical.map(d=>`${d.name} (stok:${d.stock}, eşik:${d.thr})`).join("; ")||"Yok"}
+3 Ecza deposu: Selçuk Ecza Deposu, Hedef Alliance Ecza, Sancak Ecza Deposu
+Sepet: ${cartArr.length?cartArr.map(i=>i.drug.name+" x"+i.qty+" ("+WH[i.wh].name+")").join(", "):"Boş"}
+Kullanıcı sorusu: `+txt;
+    try{
+      const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({contents:[{parts:[{text:ctx}]}]})
+      });
+      const d=await r.json();
+      const rep=d.candidates?.[0]?.content?.parts?.[0]?.text||"Yanıt alınamadı.";
+      setMsgs(p=>[...p,{r:"a",t:rep}]);
+      postJSON(CONFIG.N8N_AI_LOG_WEBHOOK_URL, {
+        source:"EczanePanel",
+        type:"ai_answer",
+        createdAt:new Date().toISOString(),
+        question:txt,
+        answer:rep
+      }).catch(()=>{});
+    }catch(e){setMsgs(p=>[...p,{r:"a",t:"Bağlantı hatası. API anahtarınızı kontrol edin."}]);}
+    setLoading(false);
+  };
+
+  useEffect(()=>{if(chatEl.current)chatEl.current.scrollTop=chatEl.current.scrollHeight;},[msgs]);
+
+  const nav=[
+    {id:"dashboard",ic:"⊞",lbl:"Genel Bakış",b:null},
+    {id:"critical",ic:"⚠",lbl:"Kritik Stok",b:critical.length||null},
+    {id:"order",ic:"◎",lbl:"Sipariş Oluştur",b:cartCount||null},
+    {id:"ai",ic:"◈",lbl:"AI Asistan",b:null},
+  ];
+
+  const filt=search?DRUGS.filter(d=>d.name.toLowerCase().includes(search.toLowerCase())||d.active.toLowerCase().includes(search.toLowerCase())):DRUGS;
+
+  return (
+    <div className="layout">
+      {/* HEADER */}
+      <header className="header">
+        <div className="logo">
+          <div className="logo-icon">💊</div>
+          EczanePanel
+        </div>
+        <span style={{color:"var(--tm)",fontSize:12}}>/&nbsp;Çamlıvadi Eczanesi</span>
+        <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:12}}>
+          {critical.length>0&&<span className="hbadge">⚠ {critical.length} Kritik Ürün</span>}
+          <span style={{color:"var(--ts)",fontSize:12}}>📅 {today}</span>
+        </div>
+      </header>
+
+      {/* SIDEBAR */}
+      <nav className="sidebar">
+        <div style={{padding:"0 12px 8px"}}>
+          <div className="nav-lbl">Menü</div>
+          {nav.map(n=>(
+            <button key={n.id} className={`nav-item${tab===n.id?" active":""}`} onClick={()=>setTab(n.id)}>
+              <span>{n.ic}</span><span>{n.lbl}</span>
+              {n.b&&<span className="nav-badge">{n.b}</span>}
+            </button>
+          ))}
+        </div>
+        <div className="sidebar-footer">
+          <div style={{fontSize:10,color:"var(--tm)",marginBottom:2}}>YZTA 5.0 Hackathon</div>
+          <div style={{fontSize:10,color:"var(--tm)",opacity:.6}}>No-Code/Low-Code · Mayıs 2026</div>
+        </div>
+      </nav>
+
+      {/* MAIN */}
+      <main className="main">
+
+        {/* ═══ DASHBOARD ═══ */}
+        {tab==="dashboard"&&(
+          <div>
+            <div className="sec-hdr">
+              <div><div className="sec-title">Stok Genel Bakış</div><div className="sec-sub">Tüm ürünlerin güncel stok durumu</div></div>
+            </div>
+            <div className="kpi-grid">
+              <div className="kpi"><div className="kpi-lbl">Toplam Ürün</div><div className="kpi-val" style={{color:"var(--tp)"}}>{DRUGS.length}</div><div className="kpi-sub">Aktif kayıt</div></div>
+              <div className="kpi"><div className="kpi-lbl">Stok Yok</div><div className="kpi-val" style={{color:"var(--red)"}}>{DRUGS.filter(d=>d.stock===0).length}</div><div className="kpi-sub">Acil sipariş</div></div>
+              <div className="kpi"><div className="kpi-lbl">Kritik / Düşük</div><div className="kpi-val" style={{color:"var(--amber)"}}>{critical.length}</div><div className="kpi-sub">Eşik altı</div></div>
+              <div className="kpi"><div className="kpi-lbl">Normal Stok</div><div className="kpi-val" style={{color:"var(--green)"}}>{DRUGS.filter(d=>getSt(d)==="ok").length}</div><div className="kpi-sub">Yeterli</div></div>
+            </div>
+            <div className="search-box">
+              <span style={{color:"var(--tm)"}}>🔍</span>
+              <input placeholder="İlaç adı veya etkin madde ara..." value={search} onChange={e=>setSearch(e.target.value)}/>
+              {search&&<button style={{background:"none",border:"none",color:"var(--ts)",cursor:"pointer",fontSize:13}} onClick={()=>setSearch("")}>✕</button>}
+            </div>
+            <div className="card" style={{padding:0}}>
+              <div className="tbl-wrap">
+                <table>
+                  <thead><tr>
+                    <th>İlaç Adı</th><th>Etkin Madde</th><th>Stok / Eşik</th><th>Durum</th><th>En Düşük Fiyat</th><th></th>
+                  </tr></thead>
+                  <tbody>
+                    {filt.map(d=>{
+                      const st=getSt(d);const[bc,bl]=stBadge(st);
+                      const best=getBest(d);
+                      const pct=Math.min(100,Math.round(d.stock/Math.max(d.thr*1.5,1)*100));
+                      return(
+                        <tr key={d.id}>
+                          <td><div style={{fontWeight:500}}>{d.name}</div><div style={{fontSize:10,color:"var(--tm)"}}>{d.pack} · {d.atc}</div></td>
+                          <td style={{color:"var(--ts)"}}>{d.active}</td>
+                          <td>
+                            <div style={{display:"flex",alignItems:"center",gap:6}}>
+                              <span style={{fontWeight:700,color:stColor(st),minWidth:22}}>{d.stock}</span>
+                              <div><div className="bar-bg"><div className="bar-fill" style={{width:pct+"%",background:stColor(st),opacity:.75}}/></div>
+                              <div style={{fontSize:10,color:"var(--tm)"}}>/{d.thr}</div></div>
+                            </div>
+                          </td>
+                          <td><span className={`badge ${bc}`}>{bl}</span></td>
+                          <td style={{color:best?"var(--green)":"var(--red)",fontWeight:600}}>
+                            {best?fmt(d.w[best].p)+" ("+WH[best].short+")":"Stokta yok"}
+                          </td>
+                          <td>
+                            {st!=="ok"&&<button className="btn btn-g" style={{fontSize:11,padding:"5px 10px"}}
+                              onClick={()=>{if(best)addCart(d,best);setTab("critical");}}>Sipariş →</button>}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ═══ CRITICAL ═══ */}
+        {tab==="critical"&&(
+          <div>
+            <div className="sec-hdr">
+              <div><div className="sec-title">Kritik Stok — Depo Fiyat Karşılaştırması</div>
+              <div className="sec-sub">{critical.length} ürün eşiğin altında · En iyi fiyat otomatik işaretleniyor</div></div>
+              <button className="btn btn-g" onClick={()=>setTab("order")}>Sepete Git ({cartCount}) →</button>
+            </div>
+            {critical.length===0&&(
+              <div style={{textAlign:"center",padding:"60px 20px"}}>
+                <div style={{fontSize:44,marginBottom:12}}>✓</div>
+                <div style={{fontSize:15,fontWeight:600,color:"var(--green)"}}>Tüm stoklar normal seviyede!</div>
+              </div>
+            )}
+            {critical.map(d=>{
+              const st=getSt(d);const[bc,bl]=stBadge(st);const best=getBest(d);
+              return(
+                <div key={d.id} className="drug-card">
+                  <div className="dc-head">
+                    <span className={`badge ${bc}`}>{bl}</span>
+                    <div style={{flex:1}}>
+                      <div style={{fontWeight:600}}>{d.name} <span style={{color:"var(--tm)",fontWeight:400,fontSize:12}}>({d.pack})</span></div>
+                      <div style={{fontSize:11,color:"var(--tm)"}}>{d.active} · {d.atc}</div>
+                    </div>
+                    <div style={{textAlign:"right"}}>
+                      <div style={{fontSize:24,fontWeight:700,color:stColor(st)}}>{d.stock}</div>
+                      <div style={{fontSize:10,color:"var(--tm)"}}>/{d.thr} eşik</div>
+                    </div>
+                  </div>
+                  <div className="dc-body">
+                    <div style={{fontSize:10,color:"var(--tm)",marginBottom:8,textTransform:"uppercase",letterSpacing:".05em",fontWeight:600}}>Depo Fiyatları</div>
+                    {Object.entries(d.w).map(([wid,w])=>(
+                      <div key={wid} className={`wh-row${wid===best?" best":""}`}>
+                        <div className="wh-dot" style={{background:WH[wid].color}}/>
+                        <span style={{flex:1,fontSize:13,fontWeight:500}}>{WH[wid].name}</span>
+                        {wid===best&&<span style={{fontSize:10,background:"var(--green)",color:"#fff",padding:"2px 7px",borderRadius:4,marginRight:8,fontWeight:700}}>EN UCUZ</span>}
+                        {!w.ok&&<span style={{fontSize:10,background:"var(--rbg)",color:"var(--red)",padding:"2px 7px",borderRadius:4,marginRight:8,border:"1px solid rgba(239,68,68,.3)"}}>STOK YOK</span>}
+                        <span style={{fontWeight:700,color:w.ok?wid===best?"var(--green)":"var(--tp)":"var(--tm)",marginRight:14}}>{fmt(w.p)}</span>
+                        <span style={{fontSize:11,color:"var(--tm)",marginRight:14}}>{w.d===1?"🚀 Yarın":w.d+" gün"}</span>
+                        <button className={`btn ${w.ok?"btn-g":"btn-o"}`} style={{padding:"5px 12px",fontSize:11,opacity:w.ok?1:.45}}
+                          disabled={!w.ok} onClick={()=>addCart(d,wid)}>
+                          {cart[d.id]?.wh===wid?"✓ Sepette":"+ Ekle"}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ═══ ORDER ═══ */}
+        {tab==="order"&&(
+          <div>
+            <div className="sec-hdr">
+              <div><div className="sec-title">Sipariş Oluştur</div>
+              <div className="sec-sub">{cartCount} ürün · Toplam: {fmt(cartTotal)}</div></div>
+            </div>
+            {cartArr.length===0?(
+              <div style={{textAlign:"center",padding:"60px 20px"}}>
+                <div style={{fontSize:44,marginBottom:12}}>🛒</div>
+                <div style={{fontSize:13,color:"var(--ts)",marginBottom:16}}>Sepetiniz boş</div>
+                <button className="btn btn-g" onClick={()=>setTab("critical")}>← Kritik Stoka Dön</button>
+              </div>
+            ):(
+              <div>
+                {Object.entries(cartByWH).map(([wid,items])=>{
+                  const wTotal=items.reduce((s,i)=>s+i.drug.w[i.wh].p*i.qty,0);
+                  return(
+                    <div key={wid} style={{marginBottom:18}}>
+                      <div className="cart-ghdr">
+                        <div className="wh-dot" style={{background:WH[wid].color}}/>
+                        <span style={{fontWeight:600}}>{WH[wid].name}</span>
+                        <span style={{marginLeft:"auto",fontWeight:700,color:"var(--green)"}}>{fmt(wTotal)}</span>
+                      </div>
+                      <div className="card" style={{padding:0}}>
+                        {items.map(({drug,qty})=>(
+                          <div key={drug.id} className="cart-item">
+                            <div style={{flex:1}}>
+                              <div style={{fontWeight:500,fontSize:13}}>{drug.name}</div>
+                              <div style={{fontSize:11,color:"var(--tm)"}}>{drug.pack} · {fmt(drug.w[wid].p)}/kutu</div>
+                            </div>
+                            <div className="qty-ctrl">
+                              <button className="qty-btn" onClick={()=>updQty(drug.id,-1)}>−</button>
+                              <span style={{fontWeight:700,minWidth:20,textAlign:"center"}}>{qty}</span>
+                              <button className="qty-btn" onClick={()=>updQty(drug.id,1)}>+</button>
+                            </div>
+                            <div style={{width:80,textAlign:"right",fontWeight:700,color:"var(--green)"}}>{fmt(drug.w[wid].p*qty)}</div>
+                            <button style={{background:"none",border:"none",color:"var(--red)",cursor:"pointer",fontSize:16,marginLeft:8}} onClick={()=>rmCart(drug.id)}>✕</button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+                <div className="card" style={{background:"rgba(16,185,129,.05)",borderColor:"rgba(16,185,129,.25)"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                    <span style={{color:"var(--ts)"}}>Toplam Tutar</span>
+                    <span style={{fontSize:22,fontWeight:700,color:"var(--green)"}}>{fmt(cartTotal)}</span>
+                  </div>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:16,fontSize:13}}>
+                    <span style={{color:"var(--ts)"}}>Depo sayısı</span>
+                    <span>{Object.keys(cartByWH).length} depo</span>
+                  </div>
+                  <button className="btn btn-g" style={{width:"100%",padding:"11px",fontSize:14,fontWeight:700}}
+                    onClick={submitOrders}>✓ Siparişleri Onayla ve Gönder</button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══ AI ═══ */}
+        {tab==="ai"&&(
+          <div>
+            <div className="sec-hdr">
+              <div><div className="sec-title">AI Asistan — Gemini ile Güçlendirilmiş</div>
+              <div className="sec-sub">Stok analizi · Sipariş önerileri · Fiyat karşılaştırması</div></div>
+            </div>
+            <div className="card" style={{padding:0,overflow:"hidden",display:"flex",flexDirection:"column",height:"calc(100vh - 180px)",minHeight:500}}>
+              <div className="api-row">
+                <span style={{fontSize:11,color:"var(--amber)",whiteSpace:"nowrap",paddingTop:8}}>🔑 Gemini API:</span>
+                <input className="api-inp" type="password" placeholder="AIzaSy... (aistudio.google.com/app/apikey'den ücretsiz alın)"
+                  value={apiKey} onChange={e=>setApiKey(e.target.value)}/>
+                {apiKey&&<span style={{color:"var(--green)",fontSize:13,paddingTop:7}}>✓</span>}
+              </div>
+              <div style={{padding:"8px 14px",borderBottom:"1px solid var(--border)",fontSize:11,color:"var(--tm)",lineHeight:1.5}}>
+                n8n bağlantıları: Sipariş Webhook {CONFIG.N8N_ORDER_WEBHOOK_URL ? "✓" : "boş"} · AI Log Webhook {CONFIG.N8N_AI_LOG_WEBHOOK_URL ? "✓" : "boş"}.
+                URL'leri dosyanın üst kısmındaki <b>CONFIG</b> alanına yaz.
+              </div>
+              <div className="quick-acts">
+                {["Hangi ürünleri acil sipariş etmeliyim?","En ucuz depoyu öner","Bugünkü stok özetini ver","Cipro için fiyat karşılaştır","Toplam sipariş maliyeti ne olur?"].map(q=>(
+                  <button key={q} className="qa-btn" onClick={()=>send(q)}>{q}</button>
+                ))}
+              </div>
+              <div className="chat-msgs" ref={chatEl}>
+                {msgs.map((m,i)=>(
+                  <div key={i} style={{display:"flex",justifyContent:m.r==="u"?"flex-end":"flex-start",alignItems:"flex-start"}}>
+                    {m.r==="a"&&<div className="ai-avatar">◈</div>}
+                    <div className={`bubble ${m.r}`}>{m.t}</div>
+                  </div>
+                ))}
+                {loading&&(
+                  <div style={{display:"flex",alignItems:"center"}}>
+                    <div className="ai-avatar">◈</div>
+                    <div className="bubble a" style={{display:"flex",alignItems:"center",gap:8}}>
+                      <div className="spinner"/><span style={{color:"var(--ts)",fontSize:12}}>Düşünüyor...</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="chat-inp-row">
+                <input className="chat-inp" placeholder="Stok durumu, fiyat veya sipariş önerisi sorun..."
+                  value={input} onChange={e=>setInput(e.target.value)}
+                  onKeyDown={e=>e.key==="Enter"&&!e.shiftKey&&send()}/>
+                <button className="btn btn-g" onClick={()=>send()} disabled={loading}>
+                  {loading?<div className="spinner"/>:"→"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* SUCCESS MODAL */}
+      {success&&(
+        <div className="modal-bg" onClick={()=>{setSuccess(false);setCart({});setTab("dashboard");}}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
+            <div style={{fontSize:46,marginBottom:14}}>✅</div>
+            <div style={{fontSize:18,fontWeight:700,marginBottom:6}}>Siparişler Gönderildi!</div>
+            <div style={{color:"var(--ts)",fontSize:13,marginBottom:12}}>{Object.keys(cartByWH).length} depoya sipariş iletildi</div>
+            <div style={{fontSize:22,fontWeight:700,color:"var(--green)",marginBottom:18}}>{fmt(cartTotal)}</div>
+            <div style={{borderTop:"1px solid var(--border)",paddingTop:12,marginBottom:16}}>
+              {Object.entries(cartByWH).map(([wid,items])=>(
+                <div key={wid} style={{display:"flex",justifyContent:"space-between",padding:"5px 0",fontSize:12}}>
+                  <span style={{color:"var(--ts)"}}>{WH[wid].name}</span>
+                  <span>{items.length} ürün · {fmt(items.reduce((s,i)=>s+i.drug.w[i.wh].p*i.qty,0))}</span>
+                </div>
+              ))}
+            </div>
+            <button className="btn btn-g" style={{width:"100%",padding:11,fontSize:14,fontWeight:700}}
+              onClick={()=>{setSuccess(false);setCart({});setTab("dashboard");}}>Tamam, Ana Ekrana Dön</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
